@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple for frontend</title>
+</head>
+<body>
+  <button type="button" onclick="download()">Download</button>
+
+  <script type="text/javascript" src="js/jszip.min.js"></script>
+  <script type="text/javascript" src="js/xlsx.js"></script>
+  <script type="text/javascript" src="js/FileSaver.js"></script>
+  
+  <script>
+    function download(){
+      var file = new xlsx.File();
+      var sheet = file.addSheet('Sheet1');
+      //内容数据
+      var data = [
+        ['Auto', 250, 99, 'B2-C2',48],
+        ['Entertainment', , 32, 'B3-C3',48],
+        ['Food', 350, 205.75, 'B4-C4',48],
+        ['Home', 300, 250, 'B5-C5',48],
+        ['Medical', 100, 35, 'B6-C6',48],
+        ['Personal Items', 300, 80, 'B7-C7',48],
+        ['Travel', 500, 350, 'B8-C8',48],
+        ['Utilities', 200, 100, 'B9-C9',48],
+        ['Other', 50, 60, 'B10-C10',48]
+      ];
+
+      function border(cell, top, left, bottom, right) {
+        var light = 'ffded9d4';
+        var dark = 'ff7e6a54';
+        cell.style.border.top = 'thin';
+        cell.style.border.topColor = top ? dark : light;
+        cell.style.border.left = 'thin';
+        cell.style.border.leftColor = left ? dark : light;
+        cell.style.border.bottom = 'thin';
+        cell.style.border.bottomColor = bottom ? dark : light;
+        cell.style.border.right = 'thin';
+        cell.style.border.rightColor = right ? dark : light;
+      }
+
+      function fill(cell, type) {
+        type = type || 0;
+        var colors = ['ffffffff', 'ffa2917d', 'ffe4e2de', 'fffff8df', 'fff1eeec'];
+        // 1: header, 2: first col, 3: second col, 4: gray, 0: white
+        cell.style.fill.patternType = 'solid';
+        cell.style.fill.fgColor = colors[type];
+        cell.style.fill.bgColor = 'ffffffff';
+      }
+
+      var header = sheet.addRow();
+      header.setHeightCM(0.8);
+      //头部数据
+      var headers = ['Category', 'Budget', 'Actual', 'Difference','new'];
+      for (var i = 0; i < headers.length; i++) {
+        var hc = header.addCell();
+        hc.value = headers[i];
+        hc.style.align.v = 'center';
+        if (i > 0) hc.style.align.h = 'right';
+        hc.style.font.color = 'ffffffff';
+        border(hc, 0, 0, 1, 0);
+        fill(hc, 1);
+      }
+
+      var len = data.length;
+      for (var i = 0; i < len; i++) {
+        var line = data[i];
+        var row = sheet.addRow();
+        row.setHeightCM(0.8);
+
+        for (var m = 0; m < line.length; m++) {
+          var cell = row.addCell();
+          cell.value = line[m];
+          cell.style.align.v = 'center';
+          cell.style.align.h = 'left';
+          border(cell, 0, 0, 0, 1);
+          fill(cell, 2);
+          if(i==0){
+             sheet.col(m).width = 20;
+          }
+        }
+      }
+      if (!(/msie [6|7|8|9]/i.test(navigator.userAgent))){
+        file
+        .saveAs('blob')
+        .then(function(content) {
+          saveAs(content, "example.xlsx");
+        });
+      }else{
+        var oXL = new ActiveXObject("Excel.Application"), 
+            oWB = oXL.Workbooks.Add(),
+            oSheet = oWB.ActiveSheet;
+        if(!document.getElementById("tableExport")){
+          var div = document.createElement("div");
+              div.setAttribute("id", "tableExport");
+              div.setAttribute("class", "fade");
+              document.body.appendChild(div);
+        }
+        var tableTemplate='';
+          tableTemplate+='<table cellpadding="0" cellspacing="0">';
+        var thead='<thead><tr>';
+        var headers = ['Category', 'Budget', 'Actual', 'Difference','new'];
+        for(var x in headers){
+          thead+="<td width='200' style='padding:10px;color:#333;background:#DDEDFB'>"+headers[x]+"</td>";
+        }
+        tableTemplate+=thead+"</tr></thead>";
+        var tbody='<tbody>';
+        for(var i=0;i<data.length;i++){
+          var row = data[i];
+          var tr="<tr>";
+          for (j = 0; j < row.length; j++) {  
+            //oSheet.Cells(i + 1, j + 1).value = row[j];
+            if(j==row.length-1){
+              tr+="<td style='height:62px;color:#3385ff;'>"+row[j]+"</td></tr>";
+            }else{
+              tr+="<td style='padding:0 10px;height:62px;color:#3385ff;'>"+row[j]+"</td>";
+            }  
+          } 
+          tbody+=tr;   
+        }
+        tableTemplate+=tbody;
+        tableTemplate+="</tbody></table>";
+        var elem = document.getElementById("tableExport"); 
+          elem.innerHTML = tableTemplate;
+          var sel = document.body.createTextRange();
+          sel.moveToElementText(elem);  
+        try{
+          sel.select();  //there ie10、11 will be error, i don't know why, but also can export 
+        } catch(e){}
+        sel.execCommand("Copy");  
+        oSheet.Paste(); 
+        oXL.Visible = true;
+      };
+
+      
+    }
+  </script>
+</body>
+</html>
